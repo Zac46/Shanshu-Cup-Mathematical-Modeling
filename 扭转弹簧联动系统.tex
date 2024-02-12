@@ -1,0 +1,1437 @@
+\documentclass[a4paper,c5size,twoside,UTF8]{ctexart} %ctexart文档类，A4纸，正文5号字
+\usepackage{xeCJK}
+%\RequirePackage{ctex}
+% \usepackage{abstract} %设置摘要
+\usepackage{graphicx}
+\usepackage{geometry}   %页面设置
+\usepackage{titlesec} %设置标题
+\usepackage{fancyhdr} %定制页眉页脚
+\usepackage{enumitem}  %定制enumerate环境参数
+\usepackage{titlesec}
+\usepackage{caption,subcaption}
+\usepackage{multirow}  %横跨两行以上排版
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{mathrsfs}   %可以让手写体输入在标题栏中
+\usepackage{float}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{physics}
+\usepackage{wrapfig}
+\usepackage{appendix}
+\usepackage{booktabs}
+\usepackage{epsfig}
+\usepackage{bm}
+\usepackage{listings}
+\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+\lstset{language=Matlab}
+\usepackage{dsfont}
+\usepackage{hyperref}
+\usepackage{threeparttable}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{makecell}  %单独控制表项单元，例如表内使用\\换行
+\newcommand{\FS}[2]{\displaystyle\frac{#1}{#2}}
+\newtheorem{definition}{定义}
+\newtheorem{theorem}{定理}
+% =============================================
+% Part 1 Edit the info
+% =============================================
+\linespread{1.5} \selectfont
+\geometry{top=1in,bottom=1in,left=1in,right=1in}  %页面设置
+%\setcounter{secnumdepth}{2}
+\pagestyle{fancy} %页眉
+\fancyhf{}
+\fancyfoot[RO]{\thepage}   %奇数右页脚
+\fancyfoot[LE]{\thepage}  %偶数左页脚
+\fancyhead[RO]{\slshape \leftmark} %奇数右页眉
+\fancyhead[LE]{\slshape \leftmark}  %偶数左页眉
+\numberwithin{equation}{section}   %跟随序号
+% =============================================
+% Part 1 Main document
+% =============================================
+
+\begin{document}
+
+	
+	
+	
+	\titleformat{\section}{\bfseries\zihao{4}}{\thesection}{1em}{}
+    \titleformat{\subsection}{\bfseries\zihao{-4}}{\thesubsection}{1em}{}
+	%\CTEXsetup[format={\bfseries\zihao{4}}]{section}  % section四号字体
+	%\CTEXsetup[number={\chinese{section}}]{section}
+	%\CTEXsetup[name={,、} ]{section}
+	\renewcommand{\abstractname}{} 
+	
+	%\CTEXsetup[format={\bfseries\zihao{4}}]{subsection}
+	%\CTEXsetup[number=\arabic{subsection}]{subsection} 
+   % \CTEXsetup[format={\bfseries\zihao{-4}} ]{subsection}%subsection小四号字体
+	
+   \title{扭转弹簧联动系统\vspace{-2em}}
+
+
+   \date{}
+   \maketitle
+   
+   
+   
+   
+   \vspace{1em}
+   \begin{center}
+   \bfseries\zihao{4}{摘要}
+   \end{center}
+   \par
+   
+   本文通过拉格朗日力学的方法对问题进行分析，区别于牛顿力学的是，拉格朗日力学不需要逐个的去分析受力，而是由体系的拉格朗日量得到运动所需要的微分方程，带入初值后通过解微分方程来得到运动方程。
+   
+   在本文中我们分析并给出了题目所要求的三种情况下的拉格朗日量，得到体系满足的微分方程后带入微分方程求解器中计算得到各时刻的体系运动状态方程。
+   
+   \begin{enumerate}[itemsep=0pt,parsep=0pt]
+   \item 针对问题一：问题一的情况较为简单，该问题只有一个自由度，广义坐标$\theta$，以$\theta$为广义坐标给出动能和使能列出拉格朗日量进行计算。
+   \item 针对问题二：问题二相比问题一加了一根扭转弹簧，这导致体系存在两个自由度，对应着广义坐标角度$\theta$和伸缩弹簧长度$x$，可以由这两个变量为广义坐标给出拉格朗日量。
+   \item 针对问题三：问题三看起来较为复杂，但分析总受力可以发现其仅在水平方向上受力，因此考虑系统质心系时就仅受一个水平方向上的惯性加速度。这样做的好处是将原本四个自由度的体系放入质心系中会抹除质心的两个自由度，而质心的动量也可以很简单的求得。但区别于前两问的是，此时质心系中的惯性力是时变的，并不是一个保守力，在列微分方程时应考虑不应遗漏。
+   \end{enumerate}
+   
+   \par   
+   \noindent  \textbf{关键字：}拉格朗日量、Runge-Kutta算法、拉格朗日方程% 关键字，\noindent要求不缩迄1�71ￄ1�77
+   \newpage
+   
+   \thispagestyle{empty}
+
+   
+	\tableofcontents
+
+
+   
+   %目录居中
+   \newpage
+
+
+
+\section{问题重述}
+
+\subsection{问题背景}
+
+
+
+弹簧在力学系统中作为重要的组成部分，能够有效控制机械组件的运动。而扭转弹簧与伸缩弹簧的联动是力学模型中经常见到的一个部分。扭转弹簧的运动模式主要是通过转动给予一个力矩，在扭动系统中承担了重要的任务。
+
+扭转弹簧有两个臂，通过扭转的方式产生力矩。这一力矩的计算方式与胡克定律类似，满足
+\begin{equation}
+	N=K\theta~.
+\end{equation}
+其中，$\theta$为两个臂的夹角（即扭转角度，单位为 $rad$）； $K$ 为刚度，是扭转弹簧的固定参数； $N$ 为产生的力矩（N·m）。初始状况下可动臂与固定臂平行，记两臂之间夹角 为扭转的角度。扭转弹簧的直径为 0.1 $m$。忽略两臂的粗细影响。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.35\textwidth]{扭转弹簧.png}
+	\caption{扭转弹簧的结构示意图}
+\end{figure}
+
+\subsection{题目重述}
+
+\subsubsection*{问题一}
+
+如图 2 所示，考虑这样一个系统：在竖直墙面上固定有一个扭转弹簧，一臂垂直固定在墙上，另一臂可绕其支点做圆周运动。假设扭转弹簧的扭矩与其张开的角度成正比，比例系数即扭转弹簧的刚度为 200 $N\cdot m$。现在在转动臂距离支点 $0.8 m$的地方固定一个质量为 25 $kg$半径为 $0.1 m$的均质小球。我们在小球上施加一个向下为 10 $N$的拉力，在扭转弹簧打开并达到平衡后，去掉拉力。记撤掉拉力的瞬间为 0 时刻，建立小球的运动模型以描述 0-10 $s$内小球的运动过程，并给出小球在 2，4，6，8 $s$时的角速度及扭转弹簧扭转的角度。
+
+
+%\begin{wrapfigure}{R}{0.2\textwidth} %比如{r}{0.5\textwidth}
+ %   \includegraphics[width=0.2\textwidth]{问题一.jpg}
+  %  \caption{碰撞时示意图}
+%\end{wrapfigure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.3\textwidth]{问题一.jpg}
+	\caption{问题一示意图}
+\end{figure}
+
+\subsubsection*{问题二}
+
+如图 3 所示，在问题一的基础上将一根刚度系数为 100000$N/m$，长度为
+0.8 $m$的伸缩弹簧套在可动臂上，弹簧的一端链接支点，另一端链接 25 $kg$的均质小球，
+小球半径同样为 0.1 $m$。小球可在转动臂上随着弹簧的伸缩做平滑运动。 试问：我们在
+小球上施加一个向下为 10 $N$的拉力，在扭转弹簧打开并达到平衡后，去掉拉力。建立小
+球的运动模型以描述 0-10 $s$内小球的整个运动过程，并给出小球在 2，4，6，8 $s$时的角
+速度，扭转弹簧张开的角度及伸缩弹簧的长度。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.3\textwidth]{问题二.png}
+	\caption{问题二示意图}
+\end{figure}
+
+
+\subsubsection*{问题三}
+
+如图 4 所示，假设扭转弹簧被平放在水平的光滑平面上，且两条臂都是可以
+转动的，在一条转动臂 0.8$m$处固定一个质量为 30$kg$的均质小球（甲球），在另一条
+转动臂 0.6 $m$处固定一个质量为 25 $kg$的小球（乙球）。甲乙两球半径均为 0.1 $m$。扭
+转弹簧的刚度为 200 $N\cdot m$。初始时刻，扭转弹簧处于闭合状态。现在 30 $kg$的小球上施
+加一个水平的周期力$F=f\cos\omega t$,其中$f =50N$, $\omega=1.4 (rad\cdot s^{-1})$，若以平行于两转动轴方向为 $y$ 轴建立平面直角坐标系，试建立系统的运动模型以描述 0-10$s$内两个小球的运动过程，并给出甲、乙小球在 2，4，6，8 $s$时的角速度、位移及扭转弹簧张开的角度。
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.35\textwidth]{问题三.png}
+	\caption{问题三示意图}
+\end{figure}
+
+\section{模型假设}
+
+\begin{enumerate}
+    \item 不考虑弹簧质量及摩擦力。
+    \item 不考虑扭转弹簧固定臂及可动臂的粗细。
+    \item 假设弹簧的形变都在容许范围内。
+    \item 在问题二中，转动轴长度为无限长，不考虑小球离开转动轴的情况。
+    \item 假设可动臂和固定臂都与扭转弹簧的中心部分\textbf{始终相切}。且在两臂张角改变时，忽略切点位置的移动带来的几何构型变化。
+    \item 在问题一和问题三中，均假设扭转弹簧的可动臂与小球质心相连。
+	\item 在问题二中，假设伸缩弹簧与小球的质心相连。
+    \item 在问题三中，\textbf{不允许}两根杆相互穿过，即不允许甲球出现在乙球右侧。
+\end{enumerate}
+
+\newpage
+
+\section{符号约定}
+
+\vspace{-3em}
+
+\begin{table}[H]
+	\centering 
+	\caption{\label{tab:test}符号约定}
+	\begin{tabular}{lc}
+		\toprule
+		符号 & 含义  \\
+		\midrule
+		$\alpha$ & \makecell[c]{前两问中以转轴圆心为顶点， \\ 竖直方向-转轴圆心-重球圆心所成夹角的角度 } \\
+		\\
+		$\beta$ & 第三问中以转轴圆心为顶点，与两球圆心所成的夹角 \\
+		\\
+		$R_1$ & 转轴半径，体中所给的参数为$0.05m$ \\
+		\\
+		$R_2$ & 两球半径，体中所给参数为$0.1m$ \\
+		\\
+		$\theta$ & \makecell[c]{为扭转弹簧张角，前两文中表现为支撑球的杆与竖直墙面夹角， \\第三问为两球支撑杆夹角} \\
+		\\
+		$\theta_n$ & \makecell[c]{以编号为$n$的球的圆心为顶点，支撑球的杆和球心与轴心连线的夹角 \\（前两文中为$\theta_1$，第三问中有$\theta_1$和$\theta_2$）} \\
+		\\
+		$x$ & 伸缩弹簧长度 \\
+		\\
+		$d$ & 轴心到球心的长度 \\
+		\\
+		$l$ & 第一问中杆长和第二问中伸缩弹簧原长 \\
+		\\
+		$l_n$ & 第三问中两个球的杆长 \\
+		\\
+		$(r,\varphi)$ & 第三问球在质心系的极坐标 \\
+		\\
+		$K,k$ & K为扭转弹簧的刚度，k为第二问中伸缩弹簧的刚度系数 \\
+		\\
+		$m$ & 球质量\\
+		\\
+		$\dot{f}\left(q_i...,\dot{q}_i...,t\right)$ & 函数$f\left(q_i...,\dot{q}_i...,t\right)$对时间t的全导数\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\section{问题分析}
+
+在后续的求解过程中，我们会用到拉格朗日力学和Matlab中的ode45函数，ode45用的是Runge-Kutta算法。针对以上两块预备知识，我们都将加以介绍。
+
+\subsection{拉格朗日力学简介}
+
+对于一般的力学系统，我们可以用牛顿力学分析每一时刻各物体的力学状态。对于$N$个自由质点，总共有$3N$个\textbf{自由度}，理想情况下，我们只需列出$3N$个力学方程就可以完全解出系统的运动状态。
+
+然而在大多数情况下，系统中都会存在\textbf{约束}(如桌面上的球不可能透过桌面到达桌底等)，这些约束使得未知量的个数增加(如桌面的支持力，是未知量)，从而使得分析系统所需的\textbf{力学方程个数相应增加}，从而带来解算的困难和复杂性。除此之外，牛顿力学中的受力分析在很多情况下也具有挑战性。但在拉格朗日力学中，约束和受力分析带来的困难都被回避了，最核心的概念是能量以及\textbf{拉格朗日量}(Lagrangian)。在本次建模过程中，我们采用的就是拉格朗日力学的方法。为此，有必要对其进行一些介绍。
+
+\subsubsection{自由度与广义坐标}
+
+能够完整描述力学系统\textbf{位形}的独立坐标个数，称为\textbf{自由度}。例如，对于$N$个质点，可以用$3N$个直角坐标$u_i:$ $(x_1,y_1,z_1),(x_2,y_2,z_2)\dots$来完整描述其位形。倘若在系统中有$m$个完整约束
+
+\begin{equation}
+    ~~~ f_i(u_1,u_2,...,u_N)=0, ~~i=1,2,...,m~.
+\end{equation}
+
+那么此时的\textbf{自由度}为
+
+\begin{equation}
+            s= 3N-m~.
+\end{equation}
+
+此时，描述系统的位形就有一种更加优越且自由的方式：可以任意选取$3N-m$个相互独立的\textbf{广义坐标}$q_i , i=1,2,...3,N-m,$来完整描述系统的状态。广义坐标既可以具有长度量纲也可以具有角度量纲，其个数等于系统自由度。另外，将广义坐标对时间的导数$\dot{q}_i(t)$称为\textbf{广义速度}。
+
+\subsubsection{虚功原理}
+
+为了使力学问题简化，应当将注意力从力这类质量转移到功及能量上。那么，如何将牛顿定律所含的机械规律用功能形式表出？我们注意到，\textbf{系统中一对相互作用内力(这往往对应约束)所做的功之和往往为零}，我们可以从这点出发重新表述力学规律。
+
+在此之前，介绍一下\textbf{虚位移}的概念：虚位移，即一切想象的、在满足约束条件下系统中可能发生的无限小位移。这个“可能”是抛开力学规律而言的，如对于静止在桌面上的木块，可以想象这个木块向四周产生无限小位移(但不能透过桌面，因为这是约束所要求的)。将虚位移记作$\delta \boldsymbol{r}$以示和真实位移$\dd \boldsymbol{r}$的区别。
+
+因而对于一个系统，设其中的约束力为$\boldsymbol{N}_i$，再想象其发生了虚位移，则约束力做的总功$\delta W'$应当满足
+
+\begin{equation}
+    \delta W'= \sum_i~ \boldsymbol{N}_i \cdot \delta \boldsymbol{r}_i = 0~.
+\end{equation}
+
+倘若考虑的是静力学问题，即系统是静止的，那么系统中的\textbf{主动力}$\boldsymbol{F}_i$(即除了约束力之外的力，一般是外界施加的)，显然满足
+
+\begin{equation}
+      \boldsymbol{F}_i + \boldsymbol{N}_i=  0~.
+\end{equation}
+
+结合(2.3)式可得\textbf{虚功原理}(注意这里的虚位移具有任意性)
+
+\begin{equation}
+    \delta W = \sum_{i} \boldsymbol{F}_i \cdot \delta \boldsymbol{r}_i = 0~.
+\end{equation}
+
+虚功原理指出，\textbf{当一个系统处于平衡状态时，作用于该系统的所有主动力的虚功之和为零}。
+
+但直接用(2.5)式求解问题是不方便的，这是因为虚位移具有很大的任意性，同时其不一定完全独立。
+
+采用广义坐标可以简化问题，由于任何一个质点的矢径$\boldsymbol{r}_i$都可以用$s$个广义坐标表示(设共有$n$个质点)
+
+\begin{equation}
+    \boldsymbol{r}_i=\boldsymbol{r}_i(q_1,q_2,\dots,q_s;t)~.
+\end{equation}
+
+因而虚功原理就可以写作(产生虚位移时不考虑时间)
+
+\begin{equation}
+   \begin{aligned}
+    \delta W & = \sum_i^n \boldsymbol{F}_i \cdot \delta \boldsymbol{r}_i(q_1,q_2,...,q_s) \\
+             & = \sum_i^n \boldsymbol{F}_i \cdot  (\sum_\alpha^s \pdv{\boldsymbol{r}_i}{q_\alpha}\delta q_\alpha)\\
+             & = \sum_\alpha^s (\sum_i^n \boldsymbol{F}_i \cdot \pdv{\boldsymbol{r}_i}{q_\alpha})\delta q_\alpha =0~.
+   \end{aligned}
+\end{equation}
+
+令最后一行括号中的内容为\textbf{广义力$Q_\alpha$}
+
+\begin{equation}
+    Q_\alpha=\sum_i^n\boldsymbol{F}_i\cdot \pdv{\boldsymbol{r}_i}{q_\alpha}~.
+\end{equation}
+
+则方程可以写作
+
+\begin{equation}
+    ~~~~~~~\delta W =\sum_\alpha^s Q_\alpha \delta q_\alpha =0, ~~~\alpha=1,2,...,s ~.
+\end{equation}
+
+这s个方程刚好可以解出独立的s个广义坐标，至此静力学问题就得解。
+
+当所研究的是动力学问题时，实际上也可以遵循上面的方法，根据牛顿运动方程
+
+\begin{equation}
+    \boldsymbol{F}_i+\boldsymbol{N}_i = m_i \ddot{\boldsymbol{r}}_i~.
+\end{equation}
+
+可做移项，同时结合约束力的性质有
+\begin{equation}
+    \sum_i(\boldsymbol{F}_i- m_i \ddot{\boldsymbol{r}}_i)\cdot \delta \boldsymbol{r}_i=0~.
+\end{equation}
+
+此时问题与(4.5)的情形没有任何差别，(4.11)就是\textbf{达朗贝尔原理}的常用形式。
+
+\subsubsection{拉格朗日方程}
+
+由达朗贝尔原理，可以导出更加具有一般性的动力学方程，即\textbf{拉格朗日方程}。
+
+将坐标关系
+\begin{equation}
+      \boldsymbol{r}_i= \boldsymbol{r}_i(q_1,q_2,...,q_s,t), i=1,2,...,n~.
+\end{equation}
+代入达朗贝尔原理，鉴于$\boldsymbol{F}_i\cdot\delta \boldsymbol{r}_i$的项在(2.7)中已经处理过，现在只需考虑
+
+\begin{equation}
+    \begin{aligned}
+        -\sum_{i=1}^{n} m_{i} \ddot{\boldsymbol{r}}_{i} \cdot \delta \boldsymbol{r}_{i} & =-\sum_{i=1}^{n}\left(m_{i} \ddot{\boldsymbol{r}}_{i} \cdot \sum_{\alpha=1}^{s} \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}} \delta q_{\alpha}\right) \\
+        & =-\sum_{\alpha=1}^{s}\left(\sum_{i=1}^{n} m_{i} \ddot{\boldsymbol{r}} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}}\right) \delta q_{\alpha} ~.
+     \end{aligned}
+\end{equation}
+进一步有
+\begin{equation}
+\begin{aligned}
+    \sum_{i=1}^{n} m_{i} \ddot{\boldsymbol{r}} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}}= & \sum_{i=1}^{n} m_{i} \frac{\mathrm{d} \dot{\boldsymbol{r}}_{i}}{\mathrm{~d} t} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}} \\
+    = & \sum_{i=1}^{n} m_{i} \frac{\mathrm{d}}{\mathrm{d} t}\left(\dot{\boldsymbol{r}}_{i} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}}\right)-\sum_{i=1}^{n} m_{i} \dot{\boldsymbol{r}}_{i} \cdot \frac{\mathrm{d}}{\mathrm{d} t}\left(\frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}}\right) ~.
+    \end{aligned}
+\end{equation}
+
+通过若干导数关系可以推得以下的\textbf{拉格朗日关系}
+    \begin{align}
+        \frac{\partial \dot{\boldsymbol{r}}_{i}}{\partial \dot{q}_{\beta}}&=\frac{\partial \boldsymbol{r}_{i}}{\partial q_{\beta}} \\
+        \frac{\partial}{\partial q_{\beta}}\left(\frac{\mathrm{d}}{\mathrm{d} t} \boldsymbol{r}_{i}\right)&=\frac{\mathrm{d}}{\mathrm{d} t}\left(\frac{\partial \boldsymbol{r}_{i}}{\partial q_{\beta}}\right) ~.
+    \end{align}
+将上述关系带入(4.14)式中有
+\begin{equation}
+    \begin{aligned}
+        \sum_{i=1}^{n} m_{i} \ddot{\boldsymbol{r}} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}} & =\sum_{i=1}^{n} m_{i} \frac{\mathrm{d}}{\mathrm{d} t}\left(\dot{\boldsymbol{r}} \cdot \frac{\partial \dot{\boldsymbol{r}}_{i}}{\partial \dot{q}_{\alpha}}\right)-\sum_{i=1}^{n} m_{i} \dot{\boldsymbol{r}}_{i} \cdot \frac{\partial \dot{\boldsymbol{r}}_{i}}{\partial q_{\alpha}} \\
+        & =\frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial}{\partial \dot{q}_{\alpha}}\left(\sum_{i=1}^{n} \frac{1}{2} m_{i}\left|\dot{\boldsymbol{r}}_{i}\right|^{2}\right)-\frac{\partial}{\partial q_{\alpha}}\left(\sum_{i=1}^{n} \frac{1}{2} m_{i}\left|\dot{\boldsymbol{r}}_{i}\right|^{2}\right)~.
+    \end{aligned}
+\end{equation}
+注意到最后一行括号中的正好是\textbf{整个系统的动能}，记为$T$，再结合(4.7)中的过程就可以将达朗贝尔原理写作
+
+\begin{equation}
+    \sum_{\alpha=1}^{s}\left(Q_{\alpha}-\frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial T}{\partial \dot{q}_{\alpha}}+\frac{\partial T}{\partial q_{\alpha}}\right) \delta q_{\alpha}=0~.
+\end{equation}
+
+因为$\delta q_\alpha$是任意的，故可得
+\begin{equation}
+    \frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial T}{\partial \dot{q}_{\alpha}}-\frac{\partial T}{\partial q_{\alpha}}=Q_{\alpha}~.
+\end{equation}
+
+这就是\textbf{拉格朗日方程}，在主动力全为保守力的情形下，该方程可以写成更加简单的形式。
+
+由于主动力  $\boldsymbol{F}_{i}$  全是保守力时, 所以必然存在一个势能函数 $ V\left(\boldsymbol{r}_{1}, \boldsymbol{r}_{2}, \cdots, \boldsymbol{r}_{n}, t\right) $ 使得
+
+\begin{equation}
+    \boldsymbol{F}_{i}=-\boldsymbol{\nabla}_{i} V~.
+\end{equation}
+
+
+所以广义力 $ Q_{\alpha} $就可以表示为
+\begin{equation}
+\begin{aligned}
+Q_{\alpha} & =\sum_{i=1}^{n} \boldsymbol{F}_{i} \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}}=-\sum_{i=1}^{n} \boldsymbol{\nabla}_{i} V \cdot \frac{\partial \boldsymbol{r}_{i}}{\partial q_{\alpha}} \\
+& =-\frac{\partial V}{\partial q_{\alpha}} \quad(\alpha=1,2, \cdots, s) .
+\end{aligned}
+\end{equation}
+
+将此处广义力的形式代入(4.19)式中，同时由于势能函数$V$与广义速度无关，故有
+\begin{equation}
+    \frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial(T-V)}{\partial \dot{q}_{\alpha}}-\frac{\partial(T-V)}{\partial q_{\alpha}}=0 \quad(\alpha=1,2, \cdots, s)~.
+\end{equation}
+至此，我们可以定义系统的拉格朗日量$\mathcal{L}$
+\begin{equation}
+    \mathcal{L}=T-V~.
+\end{equation}
+\textbf{保守系}下的拉格朗日方程就可以写作
+
+\begin{equation}
+    \frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial \mathcal{L}}{\partial \dot{q}_{\alpha}}-\frac{\partial \mathcal{L}}{\partial q_{\alpha}}=0 \quad(\alpha=1,2, \cdots, s)~.
+\end{equation}
+
+
+通过求解这一组方程，就可以完全确定系统的力学演化。足见在主动力全为保守力的情况下，拉格朗日量$\mathcal{L}$包含了系统所有的力学信息。侧重于能量这一标量的拉格朗日力学，大大简化了复杂力学系统的分析。
+
+在主动力不全为保守力的情况下(如题三)，方程就变为
+\begin{equation}
+    \frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial \mathcal{L}}{\partial \dot{q}_{\alpha}}-\frac{\partial \mathcal{L}}{\partial q_{\alpha}}=Q_\alpha \quad(\alpha=1,2, \cdots, s)~.
+\end{equation}
+其中$Q_\alpha$就是\textbf{非保守主动力对应的广义力}。在接下来的模型分析和求解过程中，我们主要会用到(4.24)式和(4.25)式。
+
+
+\newpage
+
+\subsection{Runge-Kutta算法}
+Runge-Kutta算法是用于非线性常微分方程的解的一类重要的迭代法，
+这种算法可以精确的数值求解微分方程，最简单的Runge-Kutta算法便是
+Euler法，Euler法是一个简单的单步迭代法，对于微分方程$y'=f\left(x,y\right)$，由
+Euler公式：
+
+\begin{equation}
+	\left\{
+		\begin{aligned}
+			y_{n+1}&= y_n+hf\left( x_n,y_n \right) \\
+			x_{n+1}&=x_n+h~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+在给出微分方程的初值$(x_n,y_n)$时，通过这个公式的迭代可以给出微分方程的
+数值解，当步长$h$越小时，给出的数值解误差就越小，绘制出的函数图像就越接近
+方程的解。这样算法的结果符合$y\left(x\right)$在$\left( x_0,y_0 \right)$
+处的Taylor展开式子前两项，计算出结果的误差为$o\left( h^2 \right)$，若将公式
+改进成:
+
+\begin{equation}
+	\left\{
+		\begin{aligned}
+			y_{n+1}&= y_n+\FS{h}{2}\left( K_1+K_2 \right) \\
+			x_{n+1}&=x_n+h \\
+			K_1&=f\left( x_n,y_n \right) \\
+			K_2&=f\left( x_{n}+h,y_n+hK_1 \right)~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+这样给出的形式是二阶Runge-Kutta算法的一种，被称为Heun方法。
+
+这样由于在单步计算的时候需要计算两次$f\left(x,y\right)$的值，这样算法的结果符合$y\left(x\right)$
+在$\left(x_0,y_0\right)$处Taylor展开式的前三项，误差为$o\left(h^3\right)$，随着阶数的
+增加，计算方法的精度也随之增加，可以得到更加精确的计算结果。
+
+下边给出四阶Runge-Kutta算法算法的公式为例（本片文章解微分方程时涉及四阶和五阶的Runge-Kutta算法）：
+
+\begin{equation}
+	\left\{
+		\begin{aligned}
+			y_{n+1}&= y_n+\FS{h}{6}\left( K_1+2K_2+2K_3+K_4 \right) \\
+			x_{n+1}&=x_n+h \\
+			K_1&=f\left( x_n,y_n \right) \\
+			K_2&=f\left( x_{n}+\FS{h}{2},y_n+\FS{h}{2}K_1 \right) \\
+			K_3&=f\left( x_{n}+\FS{h}{2},y_n+\FS{h}{2}K_2 \right) \\
+			K_4&=f\left( x_{n}+{h},y_n+{h}K_3 \right) ~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+对于高阶的微分方程，需要引入新变量来转化成一阶微分方程求解，例如：
+
+\begin{equation}
+	y''=f\left(x,y,y'\right)\Longrightarrow 
+	\left\{
+		\begin{aligned}
+			y'&=z \\
+			z'&=f\left(x,y,z\right) ~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+\newpage
+
+\subsection{问题一分析}
+
+问题一所示的系统为保守系，所有主动力都可以通过势能表达。另外，如果我们假设可动臂始终与扭转弹簧中心部分相切，且忽略切点位置变化，就不难看出整个系统只有一个自由度。可以选取两臂夹角作为唯一的广义坐标来描述该系统。
+
+对于系统的初始状态，我们可以用牛顿力学的方式分析：以$O_1$为转轴，考虑外力$\boldsymbol{F}$、球重力、扭转弹簧自身的对应力矩，三者达到力矩平衡。由此条件可求解初始状态下的两臂夹角。
+
+进一步地，我们可以写出系统的动能、势能和拉氏量，利用拉格朗日方程结合初始条件，就可以解出系统的演化规律。
+
+\subsection{问题二分析}
+
+
+第二问与第一问的区别仅仅是引入了伸缩弹簧，同时球变得可以在可动臂上滑动。此时系统具有两个自由度，我们可以选取球在可动臂上的位置和扭转弹簧两臂夹角作为广义坐标。依然可以通过牛顿力学的方式确定初始条件，再结合拉格朗日力学求解问题。
+
+\subsection{问题三分析}
+
+问题三中的系统自由度较多，为简化问题，我们可以选取两球的质心参考系以简化分析。倘若选取了质心参考系，系统的自由度就减少为两个。我们可以选取其中一球至质心的距离和其矢径与质心系坐标轴的夹角作为系统的广义坐标。值得注意的是，此时我们选取的质心系为非惯性系，需引入\textbf{惯性力}。总的分析流程与前两问一致，只是会用到方程(4.25)。
+
+\newpage
+
+\section{模型建立}
+
+\subsection{问题一的模型建立与求解}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.55\textwidth]{Q1.pdf}
+	\caption{问题一示意图}
+\end{figure}
+
+
+
+
+上图所示的即是对问题一的模型抽象图，求解过程中需要用到的各几何尺寸，都已在图上标出。值得说明的是，由于模型假设4，$\triangle O_2 A O_1$始终为直角三角形，且我们将忽略$A$点的位置变化。
+
+\subsubsection{求解初始条件}
+
+我们选取$\theta$作为系统唯一的广义坐标，首先用牛顿力学求解系统的初始状态，以$O_1$为转轴，可以列出力矩平衡方程
+\begin{equation}
+    \begin{aligned}
+        M_F+M_G+M_T&=0\\
+        \Rightarrow (F+mg)d \sin\alpha-K&\theta=0~.
+    \end{aligned}
+\end{equation}
+其中$M_T$为扭转弹簧产生的力矩，$\alpha=\theta+\theta_1$(考虑延长线段$O_2O_1$与墙壁相交，并利用$\alpha$的同位角，不难判断此关系)，于是就可以进一步将方程写作
+
+\begin{equation}
+    (F+mg)\sqrt{l^2+R_1^2}  \sin(\theta+\arctan\frac{R_1}{l})-K\theta=0~.
+\end{equation}
+
+利用Matlab求解这一方程，代码如下：
+
+\vspace{-1.7em}
+
+\begin{lstlisting}
+clear;
+syms ini_x ini_t; %ini_x
+ini_fun=(10+25*9.8)*sin(ini_t)*0.8+(10+25*9.8)*cos(ini_t)*0.05-200*ini_t; %总力矩
+initheta=vpasolve( ini_fun,ini_t,[0.0000000001,2]);%[0.0000000001,2]给出解范围，避免算出竖直的解
+\end{lstlisting}
+
+
+解得初始时刻的两臂夹角为
+
+\begin{equation}
+    \theta_0=0.7218 ~rad~.
+\end{equation}
+
+
+\subsubsection{求解运动过程}
+
+接下来采用拉格朗日力学求解问题，首先应写出系统的动能和势能。
+
+系统动能在本题中仅表现为球绕$O_1$轴的转动动能，为计算这一动能，我们首先考虑球绕$O_1$的转动惯量。\textbf{平行轴定理}可以很方便地计算这一问题
+\begin{equation}
+    \begin{aligned}
+      I&=I_C + md^2\\
+         &=\frac{2}{5}mR_2^2+m\sqrt{l^2+R_1^2}~.
+    \end{aligned}
+\end{equation}
+其中，$I_C=\frac{2}{5}mR_2^2$是球相对于质心的转动惯量，$d$是球质心到转轴的距离。于是不难写出系统动能
+\begin{equation}
+    T= \frac{1}{2}I\dot{\alpha}^2=\frac{1}{2}\left(\frac{2 m R_{2}^{2}}{5}+m l^{2}+m R_{1}^{2}\right) \dot{\theta}^{2}~.
+\end{equation}
+
+
+系统势能包括两部分：扭转弹簧的弹性势能和球的重力势能(以轴心所在高度为势能零点)
+
+\begin{equation}
+    \begin{aligned}
+       ~~~~~~~ V&=V_1+V_2\\
+         &=\frac{1}{2}K\dot{\theta}^2+mgh\\
+         &=\frac{1}{2}K\dot{\theta}^2+mgd\cdot\cos\alpha\\
+         &=\frac{1}{2}K\dot{\theta}^2+mg\sqrt{l^2+R_1^2}\cos(\theta + \arctan{\frac{R_1}{l}})~.
+    \end{aligned}
+\end{equation}
+
+综上，我们就可以写出系统的拉格朗日量
+
+\begin{equation}
+    \mathcal{L}=T-V~.
+\end{equation}
+
+再将其代入拉格朗日方程
+
+\begin{equation}
+\frac{\mathrm{d}}{\mathrm{d} t} \frac{\partial \mathcal{L}}{\partial \dot{\theta}}-\frac{\partial \mathcal{L}}{\partial \theta}=0~.
+\end{equation}
+
+就可得解。
+
+\newpage 
+
+以上过程均使用Matlab编程实现，其中求解微分方程用到的ode45函数，ode45表示采用四阶-五阶Runge-Kutta算法，它用4阶方法提供候选解，5阶方法控制误差，是一种自适应步长（变步长）的常微分方程数值解法，其整体截断误差为($\Delta x)^5$，解决的是Nonstiff(非刚性)常微分方程。
+
+整体代码附于文末，现展示结果：
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q1.eps}
+	\caption{扭转角度$\theta$随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q1‘.eps}
+	\caption{角速度$\dot{\theta}$随时间变化关系图}
+\end{figure}
+
+综上，模型求解的结果为
+
+\begin{table}[H]
+    \centering
+    \caption{问题一求解结果汇总}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        时间$t/s$                             & 2      & 4       & 6      & 8       \\ \hline
+        扭转角度$\theta/rad$                      & 0.5047 & 0.7064  & 0.5298 & 0.6651  \\ \hline
+        角速度$\dot{\theta}/(rad \cdot s^{-1})$ & 0.0431 & -0.0996 & 0.1211 & -0.1677 \\ \hline
+        \end{tabular}
+    \end{table}
+	
+
+
+\subsection{问题二的模型建立与求解}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.55\textwidth]{Q2.pdf}
+	\caption{问题二示意图}
+\end{figure}
+
+第二问的求解思路完全类似于第一问。只是相比于第一问，第二问中多加了伸缩弹簧，这为系统增加了一个自由度，现在系统一共有伸缩弹簧长度$x$和扭转弹簧张角$\theta$两个广义坐标。
+
+
+\subsubsection{求解初始条件}
+
+我们首先求解系统的初始状态。根据可动臂AB方向上的受力平衡条件，以及系统相对于轴$O_1$处于力矩平衡状态，我们可以列出方程组
+
+\begin{equation}
+    \left\{
+        \begin{aligned}
+        &(F+mg) \cos\theta_0-k(l-x_0)=0 \\
+        &(F+mg) \sin(\theta_0) x+(F+mg)\cos(\theta_0) R_1-K\theta_0 = 0~.
+        \end{aligned}
+    \right.
+\end{equation}
+
+应当注意此时$d$并非常量，而是一个依赖于广义坐标$x$的函数$d=\sqrt{x^2+R_1^2}$。
+
+\vspace{1.9em}
+
+利用Matlab求解该方程组，代码如下：
+
+
+\begin{lstlisting}
+clear;
+syms ini_x ini_t;
+f1=(10+25*9.8)*cos(ini_t)-100000*(0.8-ini_x);
+f2=(10+25*9.8)*sin(ini_t)*ini_x+(10+25*9.8)*cos(ini_t)*0.05-200*ini_t;
+[inivulx,inivult]=vpasolve([f1 f2],[ini_x ini_t],[0.0,inf;0.0000000001,2])
+inivulx=double(inivulx);
+inivult=double(inivult);
+\end{lstlisting}
+
+
+解得初始条件为
+
+\begin{equation}
+    \left\{
+        \begin{aligned}
+       &\theta_0=0.7159~rad \\
+        &x_0=0.7981~m~.
+        \end{aligned}
+    \right.
+\end{equation}
+
+\subsubsection{求解运动过程}
+
+接下来采用拉格朗日力学求解问题。对于系统动能，现在不止有转动动能，还有径向上的动能$\frac{1}{2}{m\dot{d}^2}$。与此同时，转动动能中的转动惯量$I$也不再是一个常数：
+
+\begin{equation}
+    I=\frac{2}{5}mR_2^2+mR_1^2+mx^2~.
+\end{equation}
+
+
+
+另外，问题一中的$\dot{\theta}=\dot{\alpha}$不再成立，因为$\alpha=\theta+\theta_1$中的$\theta_1$不再是一个常数，而是一个依赖于广义坐标$x$的函数$\theta_1=\arctan{\FS{R_1}{x}}$。
+
+综上所述，第二问中的动能项为：
+
+\begin{equation}
+	\left\{
+		\begin{aligned}
+			T & =\FS{1}{2}I\dot{\alpha}^2+\FS{1}{2}m\dot{d}^2  \\
+			I & =\FS{2}{5}mR_2^2+mR_1^2+mx^2 \\
+			\alpha & =\theta +\arctan{\FS{R_1}{x}} \\
+			d &= \sqrt{R_1^2+x^2} ~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+
+
+第二问的势能项与第一问类似，只是涉及$l$的地方需要换成$x$:
+
+\begin{equation}
+	V  =  \FS{1}{2}K\theta^2+mg\sqrt{x^2+R_1^2}\cos{\left(\theta+\arctan{\FS{R_1}{x}}\right)}~.
+\end{equation}
+
+
+于是有拉格朗日量$\mathcal{L}$:
+
+
+\begin{equation}
+    \mathcal{L}=T-V~.
+\end{equation}
+
+
+之后通过对两个广义坐标同时列拉格朗日方程来求得体系运动遵循的微分方程：
+
+\begin{equation}
+	\left\{
+\begin{aligned}
+	&\FS{d}{dt}\FS{\partial \mathcal{L}}{\partial \dot{\theta}}-\FS{\partial{\mathcal{L}}}{\partial{\theta}}=0  \\
+	&\FS{d}{dt}\FS{\partial \mathcal{L}}{\partial \dot{x}}-\FS{\partial{\mathcal{L}}}{\partial{x}}=0  ~.
+\end{aligned}
+    \right.
+\end{equation}
+
+
+\newpage
+以上过程均使用Matlab编程实现，代码附于文末，现展示结果：
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q2.eps}
+	\caption{扭转角度$\theta$随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q21.eps}
+	\caption{角速度$\dot{\theta}$随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q2x.eps}
+	\caption{伸缩弹簧长度$x$随时间变化关系图}
+\end{figure}
+
+
+综上，模型求解的结果为
+
+\begin{table}[H]
+    \centering
+    \caption{问题二求解结果汇总}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        时间$t/s$                             & 2                           & 4                            & 6                           & 8                            \\ \hline
+        扭转角度$\theta/rad$                    & \multicolumn{1}{c|}{0.4983} & \multicolumn{1}{c|}{0.7017}  & \multicolumn{1}{c|}{0.5216} & \multicolumn{1}{c|}{0.6631}  \\ \hline
+        角速度$\dot{\theta}/(rad \cdot s^{-1})$ & \multicolumn{1}{c|}{0.0417} & \multicolumn{1}{c|}{-0.0955} & \multicolumn{1}{c|}{0.1168} & \multicolumn{1}{c|}{-0.1639} \\ \hline
+        伸缩弹簧长度$x/m$                         & 0.797817                      & 0.798165                       & 0.797952                      & 0.798104                       \\ \hline
+    \end{tabular}
+\end{table}
+
+
+\newpage
+
+
+\subsection{问题三的模型建立与求解}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.55\textwidth]{Q3.pdf}
+	\caption{问题三示意图}
+\end{figure}
+
+
+
+直接分析问题三是十分困难的，因此选取在质心系分析问题，这样会减少系统的自由度。
+
+由于两物体质量固定，设甲球质量为$m_2$，位置用极坐标表示为$\left( r_2, \varphi_2\right)$，乙球质量为$m_1$，位置用极坐标表示为$\left( r_1, \varphi_1\right)$。
+由于甲球乙球的质量是固定的：$m_2=30kg,m_1=25kg$，那么他们在以质心为原点的质心系下的极坐标满足如下关系：
+
+\begin{equation}
+	\left\{
+\begin{aligned}
+	r_2 &= \FS{5}{6}r_1  \\
+	\varphi_2 &= \varphi_1+\pi ~.
+   \end{aligned}
+   \right.
+\end{equation}
+
+
+
+\subsubsection{求解初始条件}
+
+问题三的初始条件是非常显然的，只需分析静止状态时的几何关系(可参见图13)有
+
+\begin{equation}
+    \left\{
+        \begin{aligned}
+       &r_{10}=\sqrt{0.1^2+(0.8-0.6)^2}\cdot \frac{6}{11}=0.1220~m \\
+        &\varphi_{10}=-\arctan(\frac{0.8-0.6}{0.1})=-1.1071~rad~.
+        \end{aligned}
+    \right.
+\end{equation}
+
+
+\newpage
+
+\subsubsection{求解运动过程}
+
+根据几何关系有：
+
+\begin{equation}
+	\left\{
+\begin{aligned}
+	d_1&=\sqrt{l_1^2+R_1^2}  \\
+	d_2&=\sqrt{l_2^2+R_1^2}  \\
+	\cos{\beta}&=\FS{d_1^2+d_2^2-\left(r_1+r_2\right)^2}{2d_1d_2} \\
+	\beta&= \theta +\arctan{\FS{R_1}{l_1}}+\arctan{\FS{R_1}{l_2}} ~.
+\end{aligned}
+    \right.
+\end{equation}
+
+
+质心系内的动能分为转动动能和径向的动能两部分，势能为扭转弹簧的弹性势能，取$r_1$和$\varphi_1$为广义坐标则有：
+
+\begin{equation}
+\left\{
+\begin{aligned}
+	\mathcal{L}&= T-V  \\
+	T&= \FS{1}{2}I_1\dot{\varphi_1}^2+\FS{1}{2}I_2\dot{\varphi_2}^2+\FS{1}{2}m\left( \dot{r}_1^2+\dot{r}_2^2 \right)  \\
+	V&=\FS{1}{2}K\dot{\theta}^2 \\
+	I_1&=\FS{2}{5}m_1R_2^2+m_1r_1^2 \\
+	I_2&=\FS{2}{5}m_2R_2^2+m_2r_2^2 \\
+	r_2&=\FS{5}{6}r_1 \\
+	\theta&= \arccos{\left(\FS{d_1^2+d_2^2-\left(r_1+r_2\right)^2}{2d_1d_2}\right)}-\arctan{\FS{R_1}{l_1}}-\arctan{\FS{R_1}{l_2}} ~.
+\end{aligned}
+\right.
+\end{equation}
+
+还有一点需要注意的是，我们是在质心系中分析问题，但此时质心系并不是一个惯性系，所以会存在一个惯性加速度$\boldsymbol{a}=-\FS{\boldsymbol{F}}{m_1+m_2}$，所以
+甲乙两球在质心系中受到$\boldsymbol{F}_2,\boldsymbol{F}_1$分别为:
+
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	\bm{F}_1&=-\FS{m_1}{m_1+m_2}\bm{F} \\
+	\bm{F}_2&=F+m_2\bm{a}=-\bm{F}_1 ~.
+    \end{aligned}
+    \right.
+\end{equation}
+
+
+这个力是时变的，所以选择将他视作广义力而非势能，两个广义坐标对应的广义力分别为：
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	Q_{r_1}&=\sum\limits_{i=1,2}\bm{F_i}\cdot \FS{\partial\bm{r_i}}{\partial r_1}&=\FS{\partial\left( fr_1\cos{\varphi_1}\cos{\omega t} \right)}{\partial r_1}
+		-\FS{\partial\left( fr_2\cos{\varphi_2}\cos{\omega t} \right)}{\partial r_1}&=\FS{5}{6}f\cos{\varphi_1\cos{\omega t}} \\
+	Q_{\varphi_1}&=\sum\limits_{i=1,2}\bm{F_i}\cdot \FS{\partial\bm{r_i}}{\partial \varphi_1}&=\FS{\partial\left( fr_1\cos{\varphi_1}\cos{\omega t} \right)}{\partial \varphi_1}
+		-\FS{\partial\left( fr_2\cos{\varphi_2}\cos{\omega t} \right)}{\partial \varphi_1}&=-\FS{5}{6}fr_1\sin{\varphi_1\cos{\omega t}} ~.
+    \end{aligned}
+    \right.
+\end{equation}
+
+
+
+
+
+
+则可以列拉格朗日方程：
+
+
+
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	&\FS{d}{dt}\FS{\partial\mathcal{L}}{\partial \dot{r}_1} - \FS{\partial \mathcal{L}}{\partial r_1}=Q_{r_1}\\
+	&\FS{d}{dt}\FS{\partial\mathcal{L}}{\partial \dot{\varphi}_1} - \FS{\partial \mathcal{L}}{\partial \varphi_1}=Q_{\varphi_1} ~.
+    \end{aligned}
+    \right.
+\end{equation}
+
+
+
+\begin{wrapfigure}{r}{0.22\textwidth} %比如{r}{0.5\textwidth}
+	\vspace{2em}
+    \centering
+    \includegraphics[width=0.18\textwidth]{相切.pdf}
+    \caption{碰撞时示意图}
+\end{wrapfigure}
+
+\vspace{1em}
+
+但在计算中可以发现，系统是\textbf{可能存在碰撞}的。
+
+
+
+如图13所示， 
+根据题中给出几何尺寸可以发现在初始时刻两球是紧凑相贴在一起的，又因为两球间距是正比于质心系中的$r_1$的，所以在$r_1$小于初始值
+的时候便可以判断发生了碰撞，在质心系中列弹性碰撞前后的动能方程、动量方程和角动量方程，可以计算得到碰撞之后两球在质心系中的
+轴向速度反向，其余不变，反映在广义坐标上便是：
+
+
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	r_1'&=r_1 \\
+	\dot{r}_1'&=-\dot{r}_1 \\
+	\varphi_1'&=\varphi_1 \\
+	\dot{\varphi}_1'&=\dot{\varphi}_1   ~.
+\end{aligned}
+\right.
+\end{equation}
+
+
+
+因此为了模拟碰撞，我们只需要找到那些$r_1$小于初始值的时刻，从此处\textbf{截断并将$\dot{r}_1$反向后作为新的初始条件求解微分方程}。
+
+但我们这样计算出的结果是在质心系中两球的极坐标，而我们最终需要的结果是以转轴为原点的两球位移、角速度、和扭转弹簧的夹角。
+这其中，扭转弹簧的夹角$\theta$之前已经提及:
+
+\begin{equation}
+	\theta= \arccos{\left(\FS{d_1^2+d_2^2-\left(r_1+r_2\right)^2}{2d_1d_2}\right)}-\arctan{\FS{R_1}{l_1}}-\arctan{\FS{R_1}{l_2}}~.
+\end{equation}
+
+而对于在以转轴为坐标系时两球的位移和角速度则需要将坐标系平移到转轴后再进行计算。为了达成这个目的，首先需要考虑转轴
+在质心系下的坐标。
+
+从另一个角度看，转轴实际上是以两球圆心为中心，分别以$d_1$和$d_2$为半径作圆交与两点中的一个点。
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{Q3+.pdf}
+	\caption{确定转轴位置}
+\end{figure}
+
+
+
+
+
+
+由于转轴的形状，我们可以确定其坐标为下侧的交点。
+如图14所示，可以得到转轴在质心系下坐标$(x_{axis},y_{axis})$满足以下关系（乙球编号为1，甲球编号为2）：
+\begin{equation}
+	\left\{\begin{aligned}
+		x_{axis}&=x_2+d_2 \cos{\beta} \\
+		y_{axis}&=y_2+d_2 \sin{\beta} \\
+		x_2 &= r_2\cos{\varphi_2} \\
+		y_2 &= r_2\cos{\varphi_2} \\
+		\beta &=\varphi_1 - \alpha \\
+		\alpha &= \arccos{\left( \FS{d_2^2+\left( r_1+r_2 \right)^2 -d_1^2}{2d_2\left( r_1+r_2 \right)} \right)} ~.
+	\end{aligned}
+	\right.
+\end{equation}
+
+所以乙甲两球在转轴为原点的参考系下，新的直角坐标和原本的坐标之间的关系是：
+
+\begin{equation}
+	\left\{\begin{aligned}
+		x_1'&=r_1\cos{\varphi_1}-x_{axis} \\
+		y_1'&=r_1\sin{\varphi_1}-y_{axis} \\
+		x_2'&=r_2\cos{\varphi_2}-x_{axis} \\
+		y_2'&=r_2\sin{\varphi_2}-y_{axis} ~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+角速度为:
+
+\begin{equation}
+	\left\{\begin{aligned}
+		\omega_1 & = \dot{\varphi}_1' =& \FS{d}{dt}\left(\arctan{\FS{y_1'}{x_1'}}\right)& \\
+		\omega_2 & = \dot{\varphi}_2' =& \FS{d}{dt}\left(\arctan{\FS{y_2'}{x_2'}}\right)& ~.
+		\end{aligned}
+	\right.
+\end{equation}
+
+\newpage
+
+以上过程均使用Matlab编程实现，代码附于文末，现展示结果：
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-x1.eps}
+	\caption{乙球$x$坐标随时间变化关系图}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-y1.eps}
+	\caption{乙球$y$坐标随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-x2.eps}
+	\caption{甲球$x$坐标随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-y_2.eps}
+	\caption{甲球$y$坐标随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-omega1.eps}
+	\caption{乙球角速度$\omega_1$随时间变化关系图}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-omega2.eps}
+	\caption{甲球角速度$\omega_2$随时间变化关系图}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Q3-theta.eps}
+	\caption{扭转弹簧张角$\theta$随时间变化关系图}
+\end{figure}
+
+
+综上，模型求解的结果为
+
+\begin{table}[H]
+    \centering
+    \caption{问题二求解结果汇总}
+    \begin{tabular}{|cc|l|l|l|l|}
+		\hline
+		\multicolumn{2}{|c|}{时间$t/s$}                                                                                      & 2                           & 4                           & 6                           & 8       \\ \hline
+		\multicolumn{1}{|c|}{\multirow{2}{*}{$x/m$}}                               & 甲                                     & \multicolumn{1}{c|}{0.6245} & \multicolumn{1}{c|}{0.2402} & \multicolumn{1}{c|}{0.3126} & 0.7214  \\ \cline{2-6} 
+		\multicolumn{1}{|c|}{}                                                     & 乙                                     & \multicolumn{1}{c|}{0.3362} & \multicolumn{1}{c|}{0.3112} & \multicolumn{1}{c|}{0.1245} & 0.4866  \\ \hline
+		\multicolumn{1}{|c|}{\multirow{2}{*}{$y/m$}}                               & 甲                                     & -0.5025                     & 0.7647                      & -0.7381                     & -0.3494 \\ \cline{2-6} 
+		\multicolumn{1}{|c|}{}                                                     & 乙                                     & -0.4995                     & 0.5154                      & -0.5891                     & -0.3545 \\ \hline
+		\multicolumn{1}{|c|}{\multirow{2}{*}{角速度$\omega/(rad \cdot s^{-1})$}} & 甲                                     & 2.5519                      & 1.0528                      & 1.8012                      & -0.2279 \\ \cline{2-6} 
+		\multicolumn{1}{|c|}{}                                                     & 乙                                     & 2.2940                      & 1.0945                      & 1.9169                      & 0.2962  \\ \hline
+		\multicolumn{1}{|c|}{扭转角度$\theta/rad$}                                     & \multicolumn{1}{l|}{\textbackslash{}} & 0.1552                      & 0.0933                      & 0.0468                      & 0.0330  \\ \hline
+	\end{tabular}
+\end{table}
+
+
+
+
+\newpage
+
+\section{模型评价}
+
+\subsection{模型优点}
+使用拉格朗日力学分析动力学体系，对复杂问题不需要复杂的受力分析，而是仅从能量的角度分析便足够，对于复杂系统的模拟有着巨大的优势。
+
+拉格朗日力学有成熟的范式，仅需分析系统能量，剩余全可交由计算机处理。
+
+\subsection{模型缺点}
+
+若广义坐标选取不好可能会导致所解出刚性非常强的微分方程或使微分方程出现奇点，导致模
+拟时难以计算。
+
+\begin{thebibliography}{1}
+	
+	\bibitem{ref1}  梁昆淼,鞠国兴,施毅.力学（第四版）（下册）理论力学,高等教育出版社,2009.7.
+   
+\end{thebibliography}
+   
+
+
+
+\newpage
+
+\section{附录：代码}
+
+本文所使用的均为Matlab代码，需要安装符号计算扩展包（Symbolic Math Toolbox）运行。
+
+
+\subsection{问题一}
+
+
+\begin{lstlisting}
+syms  theta t;
+syms  d_theta;%使用d_theta表示theta对时间一阶导
+syms  dd_theta;%使用dd_theta表示theta对时间二阶导
+syms m R_1 R_2 K l g;
+theta_1=atan(R_1/l);      %右边的theta02的角
+d=sqrt(R_1^2+(l)^2);   %两圆心间距
+T=1/2*( 2/5*R_2^2*m + m*(d^2) )*( d_theta)^2 ;
+%动能，1/2* I* d_theta^2
+h=sqrt(R_1^2+l^2)*cos(theta+theta_1);
+%球相对转轴高度
+V=m*g*h+1/2*K*theta^2;
+%势能
+
+L=T-V;%拉格朗日量
+
+func1=dt_diff( diff(L,d_theta) )-diff(L,theta);%==0
+
+func1=subs(func1,[m,R_1,R_2,K,l,g],[25,0.05,0.1,200,0.8,9.8]);
+
+f1=solve(func1,dd_theta);
+%给出dd_theta的表达式
+
+global s1;
+s1=char(f1);
+s1 = strrep(s1,'d_theta','y(2)') ;
+s1 = strrep(s1,'theta','y(1)') ;
+%传参用
+
+tspan=[0 10];
+y0= [initial_theta 0];
+ops=odeset('RelTol',1e-10,'AbsTol',1e-15);
+[time,result]=ode45(@ode,tspan,y0,ops);
+%解微分方程，time为时间轴，result为结果，第一列为theta，第二列为d_theta
+
+
+function dy=ode(x,y)
+global s1;
+dy=zeros(2,1);
+dy(1)=y(2);
+dy(2)=eval(s1);
+end
+%导入微分方程，通过全局变量s1
+
+function fun=dt_diff(fun0)
+syms  theta t;
+syms  d_theta;
+syms  dd_theta;
+fun=diff(fun0,theta)*d_theta+diff(fun0,d_theta)*dd_theta+...
+    diff(fun0,t);
+end
+%求t的全导数函数
+
+\end{lstlisting}
+
+\subsection{问题二}
+
+\begin{lstlisting}
+syms x theta t;
+syms dx dtheta;%dx dtheta分别为x和theta对时间求一阶导数
+syms ddx ddtheta;%ddx ddtheta分别为x和theta对时间求二阶导数
+syms m R_1 R_2 K k l g;
+theta_1=atan(R_1/x);d=sqrt(R_1^2+(x)^2);
+T=1/2*( 2/5*R_2^2*m + m*d^2 )*( dtheta + dt_diff(theta_1) )^2 ...
+    +1/2*m*dt_diff(d)^2;
+h=sqrt(R_1^2+x^2)*cos(theta+theta_1);
+V=m*g*h+1/2*k*(l-x)^2+1/2*K*theta^2;
+L=T-V;
+%列动能、势能、拉格朗日量
+
+func1=dt_diff( diff(L,dtheta) )-diff(L,theta);
+func2=dt_diff( diff(L,dx) )-diff(L,x);
+%Euler-Lagrange方程
+
+func1=subs(func1,[m,R_1,R_2,K,k,l,g],[25,0.05,0.1,200,100000,0.8,9.8]);
+func2=subs(func2,[m,R_1,R_2,K,k,l,g],[25,0.05,0.1,200,100000,0.8,9.8]);
+%带入常数
+
+[f1,f2]=solve([func1,func2],[ddx ddtheta]);
+%解出ddx和ddtheta
+
+global s1 s2;
+s1=char(f1);
+s2=char(f2);
+s1 = strrep(s1,'dtheta','y(4)') ;
+s2 = strrep(s2,'dtheta','y(4)') ;
+s1 = strrep(s1,'theta','y(2)') ;
+s2 = strrep(s2,'theta','y(2)') ;
+s1 = strrep(s1,'dx','y(3)') ;
+s2 = strrep(s2,'dx','y(3)') ;
+s1 = strrep(s1,'x','y(1)') ;
+s2 = strrep(s2,'x','y(1)') ;
+%传参用
+
+tspan=[0 10];
+y0=[initial_x initial_theta 0 0];
+ops=odeset('RelTol',1e-10,'AbsTol',1e-15);
+[time,result]=ode45(@ode,tspan,y0,ops);
+%结果排序为（x,theta,dx,dtheta）
+
+
+function dy=ode(x,y)
+global s1 s2;
+dy=zeros(4,1);
+dy(1)=y(3);
+dy(2)=y(4);
+dy(3)=eval(s1);
+dy(4)=eval(s2);
+end
+%输入微分方程
+
+function fun=dt_diff(fun0)
+syms x theta t;
+syms dx dtheta;
+syms ddx ddtheta;
+fun=diff(fun0,x)*dx+diff(fun0,dx)*ddx+...
+    diff(fun0,theta)*dtheta+diff(fun0,dtheta)*ddtheta+...
+    diff(fun0,t);
+end
+%求t求全导数的函数
+\end{lstlisting}
+
+
+
+
+\subsection{问题三}
+
+\begin{lstlisting}
+clear;
+syms r_1 varphi_1 t;
+syms dr_1 dvarphi_1;%dr_1和dvarphi_1分别为r_1和varphi_1的对时间的导数
+syms ddr_1 ddvarphi_1;%ddr_1和ddvarphi_1分别为r_1和varphi_1的对时间的二阶导数
+syms m1 m2 R_1 R_2 K l_1 l_2 omega f;
+theta_1=atan(R_1/l_1);theta_2=atan(R_1/l_2);
+r_2=5*r_1/6;
+varphi_2=varphi_1+pi;
+d_1=sqrt(R_1^2+l_1^2);d_2=sqrt(R_1^2+l_2^2);
+
+
+T=m1/2*dr_1^2+m2/2*dt_diff(r_2)^2 ...
+    + 1/2*( 2/5*m1*R_2^2+2/5*m2*R_2^2+m1*r_1^2 + m2*r_2^2)*dvarphi_1^2;
+%动能项
+theta= acos( ( d_1^2+d_2^2-( r_1+r_2 )^2 )/2/d_1/d_2 )-theta_2-theta_1 ;
+
+V=K/2*(theta)^2;
+%势能项
+
+
+
+% V=K/2*( acos( ( d_1^2+d_2^2-( 11*r_1/6 )^2 )/2/d_1/d_2 )-theta_2-theta_1 )^2-...
+%     r_1*cos(varphi_1)*5/11*f*cos(omega*t)-r_2*cos(varphi_1)*5/11*f*cos(omega*t);
+%另外一种算法中的势能项，即将惯性力也看成一个含时的保守立场，解释较麻烦未采用
+
+
+
+L=T-V;
+
+func1=dt_diff( diff(L,dvarphi_1) )-diff(L,varphi_1)+5/6*f*cos(omega*t)*sin(varphi_1)*r_1;
+func2=dt_diff( diff(L,dr_1) )-diff(L,r_1)-5/6*f*cos(omega * t)*cos(varphi_1);
+%Euler-Lagrange方程
+
+% func1=dt_diff( diff(L,dvarphi_1) )-diff(L,varphi_1);
+% func2=dt_diff( diff(L,dr_1) )-diff(L,r_1);
+%另外一种算法中的Euler-Lagrange方程，即将惯性力也看成一个含时的保守立场，解释较麻烦未采用
+
+
+func1=subs(func1,[m1 m2 R_1 R_2 K l_1 l_2 omega f],[25 30 0.05 0.1 200 0.6 0.8 1.4 50]);
+func2=subs(func2,[m1 m2 R_1 R_2 K l_1 l_2 omega f],[25 30 0.05 0.1 200 0.6 0.8 1.4 50]);
+%带入相关常量
+
+
+global s1 s2;
+[f1,f2]=solve([func1,func2],[ddr_1 ddvarphi_1]);
+s1=char(f1);
+s2=char(f2);
+s1 = strrep(s1,'dvarphi_1','y(4)') ;
+s2 = strrep(s2,'dvarphi_1','y(4)') ;
+s1 = strrep(s1,'varphi_1','y(2)') ;
+s2 = strrep(s2,'varphi_1','y(2)') ;
+s1 = strrep(s1,'dr_1','y(3)') ;
+s2 = strrep(s2,'dr_1','y(3)') ;
+s1 = strrep(s1,'r_1','y(1)') ;
+s2 = strrep(s2,'r_1','y(1)') ;
+%解出二阶导数满足关系
+
+time=[];result=zeros(0,4);
+
+tspan=[0 10];
+y0=[sqrt(5)/10/11*6 -atan(2) 0 0];
+% ops=[];
+ops=odeset('RelTol',1e-11,'AbsTol',1e-15);
+[t,yy]=ode45(@ode,tspan,y0,ops);
+%解微分方程
+
+
+end_time_index=length(yy(:,1));
+while min(yy(1:length(yy(:,1)),1))-sqrt(5)/10/11*6<0
+    for ind=1:length(yy(:,1))
+        if yy(ind,1)-sqrt(5)/10/11*6<0
+            end_time_index=ind;
+            break;
+        end
+    end
+        time=[time;t(1:end_time_index)];
+        result=[result;yy(1:end_time_index,:)];
+        y0=yy(end_time_index,:);y0(1)=sqrt(5)/10/11*6;
+        y0(3)=-y0(3);tstart=t(end_time_index);
+        tspan=[tstart 10];
+        [t,yy]=ode45(@ode,tspan,y0,ops);
+        
+end
+%计算碰撞相关代码，每次碰撞后以新状态为初始条件解微分方程
+
+time=[time;t];
+result=[result;yy];
+%存放结果，result中从左到右分别为r_1,\varphi_1,dr_1,d\varphi_1
+
+
+
+
+alpha = acos((d_2.^2 + (r_1+r_2).^2 -d_1.^2) / 2/ d_2 / (r_1+r_2) );
+x=r_2 * cos(varphi_2) + d_2 * cos(varphi_1-alpha);
+y=r_2 * sin(varphi_2) + d_2 * sin(varphi_1-alpha);
+x_1=r_1*cos(varphi_1)-x;    y_1=r_1*sin(varphi_1)-y;
+x_2=r_2*cos(varphi_2)-x;    y_2=r_2*sin(varphi_2)-y;
+omega_1 = dt_diff( atan(y_1/x_1) );
+omega_2 = dt_diff( atan(y_2/x_2) );
+
+
+
+x_1=subs(x_1,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+y_1=subs(y_1,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+x_2=subs(x_2,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+y_2=subs(y_2,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+omega_1=subs(omega_1,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+omega_2=subs(omega_2,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+theta=subs(theta,[R_1 R_2 l_1 l_2],[0.05 0.1 0.6 0.8]);
+
+
+string_x_1=char(x_1);   string_y_1=char(y_1);   
+string_x_2=char(x_2);   string_y_2=char(y_2);
+string_omega_1=char(omega_1);   string_omega_2=char(omega_2);
+string_theta=char(theta);   
+
+string_x_1 = strrep(string_x_1,'dvarphi_1','result(:,4)') ;
+string_x_1 = strrep(string_x_1,'varphi_1','result(:,2)') ;
+string_x_1 = strrep(string_x_1,'dr_1','result(:,3)') ;
+string_x_1 = strrep(string_x_1,'r_1','result(:,1)') ;
+string_x_1 = strrep(string_x_1,'^','.^') ;
+string_x_1 = strrep(string_x_1,'*','.*') ;
+string_x_1 = strrep(string_x_1,'/','./') ;
+
+string_y_1 = strrep(string_y_1,'dvarphi_1','result(:,4)') ;
+string_y_1 = strrep(string_y_1,'varphi_1','result(:,2)') ;
+string_y_1 = strrep(string_y_1,'dr_1','result(:,3)') ;
+string_y_1 = strrep(string_y_1,'r_1','result(:,1)') ;
+string_y_1 = strrep(string_y_1,'^','.^') ;
+string_y_1 = strrep(string_y_1,'*','.*') ;
+string_y_1 = strrep(string_y_1,'/','./') ;
+
+string_x_2 = strrep(string_x_2,'dvarphi_1','result(:,4)') ;
+string_x_2 = strrep(string_x_2,'varphi_1','result(:,2)') ;
+string_x_2 = strrep(string_x_2,'dr_1','result(:,3)') ;
+string_x_2 = strrep(string_x_2,'r_1','result(:,1)') ;
+string_x_2 = strrep(string_x_2,'^','.^') ;
+string_x_2 = strrep(string_x_2,'*','.*') ;
+string_x_2 = strrep(string_x_2,'/','./') ;
+
+string_y_2 = strrep(string_y_2,'dvarphi_1','result(:,4)') ;
+string_y_2 = strrep(string_y_2,'varphi_1','result(:,2)') ;
+string_y_2 = strrep(string_y_2,'dr_1','result(:,3)') ;
+string_y_2 = strrep(string_y_2,'r_1','result(:,1)') ;
+string_y_2 = strrep(string_y_2,'^','.^') ;
+string_y_2 = strrep(string_y_2,'*','.*') ;
+string_y_2 = strrep(string_y_2,'/','./') ;
+
+string_theta = strrep(string_theta,'dvarphi_1','result(:,4)') ;
+string_theta = strrep(string_theta,'varphi_1','result(:,2)') ;
+string_theta = strrep(string_theta,'dr_1','result(:,3)') ;
+string_theta = strrep(string_theta,'r_1','result(:,1)') ;
+string_theta = strrep(string_theta,'^','.^') ;
+string_theta = strrep(string_theta,'*','.*') ;
+string_theta = strrep(string_theta,'/','./') ;
+
+string_omega_1 = strrep(string_omega_1,'dvarphi_1','result(:,4)') ;
+string_omega_1 = strrep(string_omega_1,'varphi_1','result(:,2)') ;
+string_omega_1 = strrep(string_omega_1,'dr_1','result(:,3)') ;
+string_omega_1 = strrep(string_omega_1,'r_1','result(:,1)') ;
+string_omega_1 = strrep(string_omega_1,'^','.^') ;
+string_omega_1 = strrep(string_omega_1,'*','.*') ;
+string_omega_1 = strrep(string_omega_1,'/','./') ;
+
+string_omega_2 = strrep(string_omega_2,'dvarphi_1','result(:,4)') ;
+string_omega_2 = strrep(string_omega_2,'varphi_1','result(:,2)') ;
+string_omega_2 = strrep(string_omega_2,'dr_1','result(:,3)') ;
+string_omega_2 = strrep(string_omega_2,'r_1','result(:,1)') ;
+string_omega_2 = strrep(string_omega_2,'^','.^') ;
+string_omega_2 = strrep(string_omega_2,'*','.*') ;
+string_omega_2 = strrep(string_omega_2,'/','./') ;
+
+
+x_1=eval(string_x_1);   y_1=eval(string_y_1);   %乙球坐标
+x_2=eval(string_x_2);   y_2=eval(string_y_2);   %甲球坐标
+omega_1=eval(string_omega_1);   %乙球角速度
+omega_2=eval(string_omega_2);   %甲球角速度
+theta=eval(string_theta);       %弹簧张角
+
+function dy=ode(t,y)
+global s1 s2;
+dy=zeros(4,1);
+dy(1)=y(3);
+dy(2)=y(4);
+dy(3)=eval(s1);
+dy(4)=eval(s2);
+end
+%导入微分方程，通过全局变量s1，s2
+
+
+
+
+function fun=dt_diff(fun0)
+syms r_1 varphi_1 t;
+syms dr_1 dvarphi_1;
+syms ddr_1 ddvarphi_1;
+fun=diff(fun0,r_1)*dr_1+diff(fun0,dr_1)*ddr_1+...
+    diff(fun0,varphi_1)*dvarphi_1+diff(fun0,dvarphi_1)*ddvarphi_1+...
+    diff(fun0,t);
+end
+%求t的全导数函数
+\end{lstlisting}
+
+
+
+
+
+\end{document}
