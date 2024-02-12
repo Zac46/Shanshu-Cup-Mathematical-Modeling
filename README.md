@@ -1,1 +1,1 @@
-A problem of ShanShu Cup
+Problem A of ShanShu Cup
